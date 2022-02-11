@@ -48,44 +48,47 @@ public class InventoryEvents implements Listener {
 	 * can't take items out of the shop inventory and into their own, getting free items. */
 	
 	@EventHandler
-	public void onInventoryClick(InventoryClickEvent e) {
+	public void onInventoryClick(InventoryClickEvent event) {
 		
-		if(!(e.getWhoClicked() instanceof Player)) return;
+		if(!(event.getWhoClicked() instanceof Player)) return;
 		
-		Player p = (Player) e.getWhoClicked();
+		Player player = (Player) event.getWhoClicked();
+		ItemStack clickedItem = event.getCurrentItem();
 		
-		/* Only act on clicks in the menu inventory */
-		if(e.getView().getTitle().contains("Shop Menu")) {
+		
+		switch(event.getView().getTitle()) {
 			
-			if(e.getClickedInventory().equals(p.getInventory()) || e.getCurrentItem() == null) {
-				e.setCancelled(true);
+		case("Shop Menu"):
+			
+			
+			if(event.getClickedInventory().equals(player.getInventory()) || clickedItem == null) {
+				event.setCancelled(true);
 				return;
-			} else if(!(Utils.getShopConfig(e.getCurrentItem().getItemMeta().getDisplayName()) == null)) {
-				e.setCancelled(true);
-				shopClass.openShopPage(Utils.getShopConfig(e.getCurrentItem().getItemMeta().getDisplayName()), p);
+			} else if(!(Utils.getShopConfig(clickedItem.getItemMeta().getDisplayName()) == null)) {
+				event.setCancelled(true);
+				shopClass.openShopPage(Utils.getShopConfig(clickedItem.getItemMeta().getDisplayName()), player);
 				return;
 			}else {
-				e.setCancelled(true);
+				event.setCancelled(true);
 				return;
 			}
-		}
-
-		/* Only act on clicks in the shop page */
-		if(e.getView().getTitle().contains("Shop")) {
-			if(e.getClickedInventory().equals(p.getInventory()) || e.getCurrentItem() == null) {
-				e.setCancelled(true);
+		
+		
+		case("Shop"):
+			
+			if(event.getClickedInventory().equals(player.getInventory()) || clickedItem == null) {
+				event.setCancelled(true);
 				return;
-			} else if(e.getSlot() < 9 && e.getSlot() != 0) {
-				e.setCancelled(true);
+			} else if(event.getSlot() < 9 && event.getSlot() != 0) {
+				event.setCancelled(true);
 				return;
-			} else if(e.getCurrentItem().getType().equals(Material.BARRIER )) {
-				e.setCancelled(true);
-				shopClass.openShopMenu(p);
+			} else if(event.getCurrentItem().getType().equals(Material.BARRIER )) {
+				event.setCancelled(true);
+				shopClass.openShopMenu(player);
 				return;
 			}
 			
-			ItemStack clickedItem = e.getCurrentItem();
-			String pageName = e.getView().getTopInventory().getItem(1).getItemMeta().getDisplayName();
+			String pageName = event.getView().getTopInventory().getItem(1).getItemMeta().getDisplayName();
 			
 			/* Iterating through all the shop configs, if the page title matches the PageName in the config, I know it's the correct
 			 * config to use. */
@@ -93,34 +96,34 @@ public class InventoryEvents implements Listener {
 				YamlConfiguration shopConfig = YamlConfiguration.loadConfiguration(shopFile);
 				if(pageName.contains(shopConfig.getString("PageName"))) {
 					
-					int clickedItemsPrice = shopConfig.getInt("Items." + clickedItem.getType().toString() + ".Price");
+					int clickedItemPrice = shopConfig.getInt("Items." + clickedItem.getType().toString() + ".Price");
 					
 					/* Checking the player has enough money in their account and if they have free space in their inventory */
-					if(econ.getBalance(p) >= clickedItemsPrice) {
-						if(p.getInventory().firstEmpty() != -1) {
-							econ.withdrawPlayer(p, clickedItemsPrice);
+					if(econ.getBalance(player) >= clickedItemPrice) {
+						/* Checking the player has space in their inventory */
+						if(player.getInventory().firstEmpty() != -1) {
+							econ.withdrawPlayer(player, clickedItemPrice);
 							ItemStack itemToGive = new ItemStack(clickedItem.getType());
-							p.getInventory().addItem(itemToGive);
+							player.getInventory().addItem(itemToGive);
 							String itemName = itemToGive.getType().name().toLowerCase().replace('_', ' ');
-							p.sendMessage(Utils.chatPrefix + "You have bought one " + itemName + " for " + Integer.toString(clickedItemsPrice));
-							shopClass.openShopPage(Utils.getShopConfig(pageName), p);
-							e.setCancelled(true);
+							player.sendMessage(Utils.chatPrefix + "You have bought one " + itemName + " for " + Integer.toString(clickedItemPrice));
+							shopClass.openShopPage(Utils.getShopConfig(pageName), player);
+							event.setCancelled(true);
 							return;
 						} else {
-							e.setCancelled(true);
-							p.sendMessage(Utils.chatPrefix + "You don't have any space in your Inventory!");
+							event.setCancelled(true);
+							player.sendMessage(Utils.chatPrefix + "You don't have any space in your Inventory!");
 							return;
 						}
 					} else {
-						e.setCancelled(true);
-						p.sendMessage(Utils.chatPrefix + "You don't have enough balance to buy this!");
+						event.setCancelled(true);
+						player.sendMessage(Utils.chatPrefix + "You don't have enough balance to buy this!");
 						return;
 					}
 					
 				}
 			}
-			
+			break;
 		}
-		
 	}
 }
