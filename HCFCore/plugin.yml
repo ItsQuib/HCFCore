@@ -1,0 +1,18 @@
+name: HCFCore
+version: '0.1'
+main: com.jacobclarkdev.hcfcore.Main
+api-version: 1.16
+depend: [Vault]
+commands:
+  createhill:
+    description: Starts the process of adding a new Hill to the KOTH section of the plugin
+    usage: "Usage: /CreateHill [Army, Monument]"
+    permission: hcfcore.admin
+  finishhill:
+    description: Finishes the process of adding a new hill to the KOTH section of the plugin
+    usage: "Usage: /FinishHill"
+    permission: hcfcore.admin
+  shop:
+    description: Opens Shop
+    usage: "Usage: /shop"
+    permission: hcfore.shop
